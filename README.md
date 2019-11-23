@@ -1,0 +1,2 @@
+# FPGA_Verilog_Doorbell
+控制开发板实现可以闪烁彩灯和播放音乐的电子门铃.
