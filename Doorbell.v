@@ -16,15 +16,15 @@ reg[29:0]cnt_drbl=30'b0;//The duration of ring
 reg lock=1'b0;
 
 always@(posedge CLK)
-if(BTN_DRBL)
-	lock<=1'b1;
-else if(lock)begin
-	cnt_drbl<=cnt_drbl+1'b1;
-	if(cnt_drbl[29]==1)begin//268,435,456*20=5,368,709,120ns=5.3s
-		lock<=1'b0;
-		cnt_drbl<=1'b0;
+	if(BTN_DRBL)
+		lock<=1'b1;
+	else if(lock)begin
+		cnt_drbl<=cnt_drbl+1'b1;
+		if(cnt_drbl[29]==1)begin//268,435,456*20=5,368,709,120ns=5.3s
+			lock<=1'b0;
+			cnt_drbl<=1'b0;
+		end
 	end
-end
 
 ////////
 //BEEP//
@@ -35,6 +35,15 @@ reg[5:0]cnt_beep_prgs=6'b0;//The progress of music
 reg[25:0]pitch=26'd47774;//Control the pitch of every single note
 reg[2:0]mode=1'b1;
 reg[2:0]trck=1'b1;
+
+parameter
+l1=95565,l2=85120,l3=75849,l4=71592,
+l5=63775,l6=56818,l7=50617,
+m1=47774,m2=42567,m3=37919,m4=35790,
+m5=31887,m6=28409,m7=25308,
+h1=23889,h2=21282,h3=18960,h4=17896,
+h5=15943,h6=14204,h7=12655,
+mute=1;//Define the note
 
 wire BP_MODE;
 wire BP_SONG;
@@ -55,105 +64,96 @@ always@(posedge CLK)begin
 		BEEP<=~BEEP;
 		cnt_beep<=0;
 		case(trck)//Choose tracks
-			3'b001:case(cnt_beep_prgs)//致爱丽丝
-				6'd00:pitch<=26'd18960;
-				6'd01:pitch<=26'd21282;
-				6'd02:pitch<=26'd18960;
-				6'd03:pitch<=26'd21282;
-				6'd04:pitch<=26'd18960;
-				6'd05:pitch<=26'd25308;
-				6'd06:pitch<=26'd21282;
-				6'd07:pitch<=26'd23889;
-				6'd08:pitch<=26'd28409;
-				6'd11:pitch<=26'd47774;
-				6'd12:pitch<=26'd37919;
-				6'd13:pitch<=26'd28409;
-				6'd14:pitch<=26'd25308;
-				6'd17:pitch<=26'd37919;
-				6'd18:pitch<=26'd31887;
-				6'd19:pitch<=26'd25308;
-				6'd20:pitch<=26'd23889;
-				6'd23:pitch<=26'h1;//Mute
+			3'b001:case(cnt_beep_prgs)//Fur Elise
+				6'd00:pitch<=h3;
+				6'd01:pitch<=h2;
+				6'd02:pitch<=h3;
+				6'd03:pitch<=h2;
+				6'd04:pitch<=h3;
+				6'd05:pitch<=m7;
+				6'd06:pitch<=h2;
+				6'd07:pitch<=h1;
+				6'd08:pitch<=m6;
+
+				6'd11:pitch<=m1;
+				6'd12:pitch<=m3;
+				6'd13:pitch<=m6;
+				6'd14:pitch<=m7;
+				6'd17:pitch<=m3;
+				6'd18:pitch<=m5;
+				6'd19:pitch<=m7;
+				6'd20:pitch<=h1;
+				6'd23:pitch<=mute;//Mute
 				default:;
 				endcase
 			3'b010:case(cnt_beep_prgs)//Happy birthday to you
-				6'd00:pitch<=26'd63775;
-				6'd01:pitch<=26'h1;
-				6'd02:pitch<=26'd63775;
-				6'd04:pitch<=26'd56818;
-				6'd06:pitch<=26'd63775;
-				6'd08:pitch<=26'd47774;
-				6'd10:pitch<=26'd50617;
+				6'd00:pitch<=l5;
+				6'd01:pitch<=mute;
+				6'd02:pitch<=l5;
+				6'd04:pitch<=l6;
+				6'd06:pitch<=l5;
+				6'd08:pitch<=m1;
+				6'd10:pitch<=l7;
 				
-				6'd12:pitch<=26'd63775;
-				6'd13:pitch<=26'h1;
-				6'd14:pitch<=26'd63775;
-				6'd16:pitch<=26'd56818;
-				6'd18:pitch<=26'd63775;
-				6'd20:pitch<=26'd42567;
-				6'd22:pitch<=26'd47774;
-				6'd24:pitch<=26'h1;
+				6'd12:pitch<=l5;
+				6'd13:pitch<=mute;
+				6'd14:pitch<=l5;
+				6'd16:pitch<=l6;
+				6'd18:pitch<=l5;
+				6'd20:pitch<=m2;
+				6'd22:pitch<=m1;
+				6'd24:pitch<=mute;
 				default:;
 				endcase
 			3'b011:case(cnt_beep_prgs)//Little star
-				6'd00:pitch<=26'd47774;
-				6'd01:pitch<=26'h1;
-				6'd02:pitch<=26'd47774;
-				6'd04:pitch<=26'd31887;
-				6'd05:pitch<=26'h1;
-				6'd06:pitch<=26'd31887;
-				6'd08:pitch<=26'd28409;
-				6'd09:pitch<=26'h1;
-				6'd10:pitch<=26'd28409;
-				6'd12:pitch<=26'd31887;
+				6'd00:pitch<=m1;
+				6'd01:pitch<=mute;
+				6'd02:pitch<=m1;
+				6'd04:pitch<=m5;
+				6'd05:pitch<=mute;
+				6'd06:pitch<=m5;
+				6'd08:pitch<=m6;
+				6'd09:pitch<=mute;
+				6'd10:pitch<=m6;
+				6'd12:pitch<=m5;
 				
-				6'd14:pitch<=26'd35790;
-				6'd15:pitch<=26'h1;
-				6'd16:pitch<=26'd35790;
-				6'd18:pitch<=26'd37919;
-				6'd19:pitch<=26'h1;
-				6'd20:pitch<=26'd37919;
-				6'd22:pitch<=26'd42567;
-				6'd23:pitch<=26'h1;
-				6'd24:pitch<=26'd42567;
-				6'd26:pitch<=26'd47774;
-				6'd28:pitch<=26'h1;
+				6'd14:pitch<=m4;
+				6'd15:pitch<=mute;
+				6'd16:pitch<=m4;
+				6'd18:pitch<=m3;
+				6'd19:pitch<=mute;
+				6'd20:pitch<=m3;
+				6'd22:pitch<=m2;
+				6'd23:pitch<=mute;
+				6'd24:pitch<=m2;
+				6'd26:pitch<=m1;
+				6'd28:pitch<=mute;
 				default:;
 				endcase
 			3'b100:case(cnt_beep_prgs)//Empty
-				6'd00:pitch<=26'd63775;
-				6'd02:pitch<=26'd56818;
-				6'd04:pitch<=26'd50617;
-				6'd06:pitch<=26'd47774;
-				6'd08:pitch<=26'd50617;
-				6'd09:pitch<=26'd47774;
-				6'd12:pitch<=26'd63775;
-				6'd13:pitch<=26'd56818;
-				6'd14:pitch<=26'h1;
-				6'd15:pitch<=26'd56818;
-				6'd18:pitch<=26'h1;
+				6'd00:pitch<=mute;
 				default:;
 				endcase
 			3'b101:case(cnt_beep_prgs)//Brother John
-				6'd00:pitch<=26'd47774;
-				6'd02:pitch<=26'd42567;
-				6'd04:pitch<=26'd37919;
-				6'd06:pitch<=26'd47744;
-				6'd07:pitch<=26'h1;
-				6'd08:pitch<=26'd47774;
-				6'd10:pitch<=26'd42567;
-				6'd12:pitch<=26'd37919;
-				6'd14:pitch<=26'd47774;
+				6'd00:pitch<=m1;
+				6'd02:pitch<=m2;
+				6'd04:pitch<=m3;
+				6'd06:pitch<=m1;
+				6'd07:pitch<=mute;
+				6'd08:pitch<=m1;
+				6'd10:pitch<=m2;
+				6'd12:pitch<=m3;
+				6'd14:pitch<=m1;
 
-				6'd16:pitch<=26'd37919;
-				6'd18:pitch<=26'd35790;
-				6'd20:pitch<=26'd31887;
-				6'd22:pitch<=26'h1;
+				6'd16:pitch<=m3;
+				6'd18:pitch<=m4;
+				6'd20:pitch<=m5;
+				6'd22:pitch<=mute;
 
-				6'd24:pitch<=26'd37919;
-				6'd26:pitch<=26'd35790;
-				6'd28:pitch<=26'd31887;
-				6'd30:pitch<=26'h1;
+				6'd24:pitch<=m3;
+				6'd26:pitch<=m4;
+				6'd28:pitch<=m5;
+				6'd30:pitch<=mute;
 				default:;
 				endcase
 			default:;
