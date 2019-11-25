@@ -5,8 +5,8 @@ module Doorbell
 ,input BTN_TRCK//Track
 ,output reg BEEP
 ,output reg[15:0]LED
-,output reg[7:0]SEG
-,output reg[7:0]CAT
+,output reg[6:0]SEG
+,output reg[1:0]CAT
 );
 
 ////////
@@ -36,17 +36,31 @@ reg[25:0]pitch=26'd47774;//Control the pitch of every single note
 reg[2:0]mode=1'b1;
 reg[2:0]trck=1'b1;
 
-parameter
-l1=95565,l2=85120,l3=75849,l4=71592,
-l5=63775,l6=56818,l7=50617,
-m1=47774,m2=42567,m3=37919,m4=35790,
-m5=31887,m6=28409,m7=25308,
-h1=23889,h2=21282,h3=18960,h4=17896,
-h5=15943,h6=14204,h7=12655,
-mute=1;//Define the note
+//parameter[25:0]l1=26'd95565;
+//parameter[25:0]l2=26'd85120;
+//parameter[25:0]l3=26'd75849;
+//parameter[25:0]l4=26'd71592;
+parameter[25:0]l5=26'd63775;
+parameter[25:0]l6=26'd56818;
+parameter[25:0]l7=26'd50617;
+parameter[25:0]m1=26'd47774;
+parameter[25:0]m2=26'd42567;
+parameter[25:0]m3=26'd37919;
+parameter[25:0]m4=26'd35790;
+parameter[25:0]m5=26'd31887;
+parameter[25:0]m6=26'd28409;
+parameter[25:0]m7=26'd25308;
+parameter[25:0]h1=26'd23889;
+parameter[25:0]h2=26'd21282;
+parameter[25:0]h3=26'd18960;
+//parameter[25:0]h4=26'd17896;
+//parameter[25:0]h5=26'd15943;
+//parameter[25:0]h6=26'd14204;
+//parameter[25:0]h7=26'd12655;
+parameter[25:0]mute=26'd1;
 
 wire BP_MODE;
-wire BP_SONG;
+wire BP_TRCK;
 
 always@(posedge CLK)
 	if(cnt_beep_div==25'h1000000)begin//16,777,216/50,000,000=335.5ms
@@ -159,6 +173,8 @@ always@(posedge CLK)begin
 			default:;
 		endcase
 	end
+	else
+		BEEP<=BEEP;
 end
 
 ///////
@@ -174,7 +190,7 @@ always@(posedge CLK)
 		cnt_led_div<=cnt_led_div+1'b1;
 
 always@(posedge CLK)
-	if(cnt_led_div==25'd5000000&&lock&&((mode==3'b010)||(mode==3'b011)))begin
+	if(cnt_led_div==25'd5000000&&lock&&((mode==3'b010)))begin
 		cnt_led_prgs<=cnt_led_prgs+1'b1;
 		case(cnt_led_prgs)
 			8'd00:LED<=16'b10000000_00000000;
@@ -197,9 +213,27 @@ always@(posedge CLK)
 			8'd17:LED<=16'b00000000_00000001;
 			8'd18:LED<=16'b00000000_00000000;
 			8'd20:cnt_led_prgs<=1'b0;
+			default:;
 		endcase
 	end
-	else if(!lock||(mode==3'b001)||(mode==3'b100))
+	else if(lock&&mode==3'b011)
+		case(pitch)
+			l5:LED<=16'b00000000_00000001;
+			l6:LED<=16'b00000000_00000010;
+			l7:LED<=16'b00000000_00000100;
+			m1:LED<=16'b00000000_00001000;
+			m2:LED<=16'b00000000_00010000;
+			m3:LED<=16'b00000000_00100000;
+			m4:LED<=16'b00000000_01000000;
+			m5:LED<=16'b00000000_10000000;
+			m6:LED<=16'b00000001_00000000;
+			m7:LED<=16'b00000010_00000000;
+			h1:LED<=16'b00000100_00000000;
+			h2:LED<=16'b00001000_00000000;
+			h3:LED<=16'b00010000_00000000;
+		default:;
+		endcase
+	else if(!lock)
 		LED<=16'b00000000_00000000;
 
 ////////
@@ -213,7 +247,7 @@ always@(posedge BP_MODE)
 	else
 		mode<=mode+1'b1;
 
-always@(posedge BP_SONG)
+always@(posedge BP_TRCK)
 	if(trck==3'b101)
 		trck<=3'b001;
 	else
@@ -228,28 +262,28 @@ always@(posedge CLK)
 always@(posedge CLK)
 	if(cnt_seg==25'd250000)begin
 		case(mode)
-			3'b001:SEG<=8'h06;
-			3'b010:SEG<=8'h5b;
-			3'b011:SEG<=8'h4f;
-			3'b100:SEG<=8'h66;
+			3'b001:SEG<=7'h06;
+			3'b010:SEG<=7'h5b;
+			3'b011:SEG<=7'h4f;
+			3'b100:SEG<=7'h66;
 		default:;
 		endcase
-		CAT<=8'b11111110;
+		CAT<=2'b10;
 	end
 	else if(cnt_seg==25'd500000)begin
 		case(trck)
-			3'b001:SEG<=8'h06;
-			3'b010:SEG<=8'h5b;
-			3'b011:SEG<=8'h4f;
-			3'b100:SEG<=8'h66;
-			3'b101:SEG<=8'h6d;
+			3'b001:SEG<=7'h06;
+			3'b010:SEG<=7'h5b;
+			3'b011:SEG<=7'h4f;
+			3'b100:SEG<=7'h66;
+			3'b101:SEG<=7'h6d;
 		default:;
 		endcase
-		CAT<=8'b11111011;
+		CAT<=2'b01;
 	end
 
 Debounce i1(CLK,BTN_MODE,BP_MODE);
-Debounce i2(CLK,BTN_TRCK,BP_SONG);
+Debounce i2(CLK,BTN_TRCK,BP_TRCK);
 
 endmodule
 
