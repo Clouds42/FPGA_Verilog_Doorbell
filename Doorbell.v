@@ -292,11 +292,11 @@ reg[127:0]row1;
 reg[127:0]row2;
 always@(posedge CLK)
     case(trck)
-        3'b000:begin row1<="     Song 1     ";row2<="    Fur Elise   ";end
-        3'b001:begin row1<="     Song 2     ";row2<=" Happy Birthday ";end
-        3'b010:begin row1<="     Song 3     ";row2<="  Little  Star  ";end
-        3'b011:begin row1<="     Song 4     ";row2<="Fucking  Nothing";end
-		3'b100:begin row1<="     Song 5     ";row2<="  Brother John  ";end
+        3'd1:begin row1<="     Song 1     ";row2<="    Fur Elise   ";end
+        3'd2:begin row1<="     Song 2     ";row2<=" Happy Birthday ";end
+        3'd3:begin row1<="     Song 3     ";row2<="  Little  Star  ";end
+        3'd4:begin row1<="     Song 4     ";row2<="Fucking  Nothing";end
+		3'd5:begin row1<="     Song 5     ";row2<="  Brother John  ";end
         default:;
     endcase
 
@@ -356,10 +356,10 @@ reg[19:0]cnt_20ms;
 always@(posedge CLK or negedge BTN_TRCK)
     if(!BTN_TRCK)
         cnt_20ms<=1'b0;
-    else if(cnt_20ms==TIME_20MS)
+    else if(cnt_20ms==TIME_20MS-1'b1)
         cnt_20ms<=cnt_20ms;
     else
-        cnt_20ms<=cnt_20ms+1'b1;
+        cnt_20ms<=cnt_20ms+1'b1 ;
 
 wire delay_done=(cnt_20ms==TIME_20MS-1)?1'b1:1'b0;
 
@@ -369,17 +369,17 @@ always@(posedge CLK or negedge BTN_TRCK)
     if(!BTN_TRCK)
         cnt_500hz<=1'b0;
     else if(delay_done)
-        if(cnt_500hz==TIME_500HZ)
+        if(cnt_500hz==TIME_500HZ-1'b1)
             cnt_500hz<=1'b0;
         else
-            cnt_500hz<=cnt_500hz+1'b1;
+            cnt_500hz<=cnt_500hz+1'b1 ;
     else
         cnt_500hz<=1'b0;
 
-assign LCD_E=(cnt_500hz>TIME_500HZ/2)?1'b0:1'b1;//Negative edge
+assign LCD_E=(cnt_500hz>(TIME_500HZ-1'b1)/2)?1'b0:1'b1;//Negative edge
 
 wire write_flag;
-assign write_flag=(cnt_500hz==TIME_500HZ)?1'b1:1'b0;
+assign write_flag=(cnt_500hz==TIME_500HZ-1'b1)?1'b1:1'b0;
 
 //set function,display off,display clear,entry mode set
 reg[5:0]c_state;
@@ -388,7 +388,7 @@ reg[5:0]n_state;
 always@(posedge CLK or negedge BTN_TRCK)
     if(!BTN_TRCK)
         c_state<=IDLE;
-    else if(write_flag==1)
+    else if(write_flag)
         c_state<=n_state;
     else
         c_state<=c_state;
@@ -451,7 +451,7 @@ always@(posedge CLK or negedge BTN_TRCK)
         LCD_RS<=LCD_RS;                        
 
 always@(posedge CLK or negedge BTN_TRCK)
-    if(BTN_TRCK==1'b0)
+    if(!BTN_TRCK)
         LCD_DATA<=1'b0 ;
     else if(write_flag)
         case(n_state)
