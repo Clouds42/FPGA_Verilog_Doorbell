@@ -3,13 +3,13 @@ module Doorbell
 ,input BTN_DRBL//Doorbell
 ,input BTN_MODE
 ,input BTN_TRCK//Track
-,output reg BEEP
-,output reg[15:0]LED
-,output reg[6:0]SEG
-,output reg[7:0]CAT
+,output BEEP
+,output[15:0]LED
+,output[6:0]SEG
+,output[7:0]CAT
 ,output LCD_E
-,output reg LCD_RS
-,output reg[7:0]LCD_DATA
+,output LCD_RS
+,output[7:0]LCD_DATA
 );
 
 //---------------------------------------------------------------------
@@ -18,6 +18,7 @@ module Doorbell
 ////////
 reg[4:0]cnt_drbl=1'b0;
 reg lock=1'b0;
+reg[24:0]cnt_beep_div=1'b0;//Control the duration of every single note
 
 always@(posedge CLK)
 	if(BTN_DRBL)
@@ -38,11 +39,11 @@ always@(posedge CLK)
 //BEEP//
 ////////
 reg[16:0]cnt_beep=1'b0;//Generate square waves in different frequency
-reg[24:0]cnt_beep_div=1'b0;//Control the duration of every single note
 reg[5:0]cnt_beep_prgs=1'b0;//The progress of music
 reg[16:0]pitch=17'd47774;//Control the pitch of every single note
 reg[2:0]mode=1'b1;
 reg[2:0]trck=1'b1;
+reg beep;
 
 /*parameter[16:0]l1=17'd95565;
 parameter[16:0]l2=17'd85120;
@@ -79,17 +80,7 @@ always@(posedge CLK)
 		cnt_beep_div<=1'b0;
 		cnt_beep_prgs<=cnt_beep_prgs+1'b1;
 	end
-	else if(cnt_beep_prgs==6'd32 && trck==3'b001)//The length of music 1
-		cnt_beep_prgs<=0;
-	else if(cnt_beep_prgs==6'd32 && trck==3'b010)//The length of music 2
-		cnt_beep_prgs<=0;
-	else if(cnt_beep_prgs==6'd32 && trck==3'b011)//The length of music 3
-		cnt_beep_prgs<=0;
-	else if(cnt_beep_prgs==6'd32 && trck==3'b100)//The length of music 4
-		cnt_beep_prgs<=0;
-	else if(cnt_beep_prgs==6'd32 && trck==3'b101)//The length of music 5
-		cnt_beep_prgs<=0;
-	else if(BTN_DRBL)
+	else if(cnt_beep_prgs==6'd32 || BTN_DRBL)
 		cnt_beep_prgs<=0;
 	else
 		cnt_beep_div<=cnt_beep_div+1'b1;
@@ -97,7 +88,7 @@ always@(posedge CLK)
 always@(posedge CLK)begin
 	cnt_beep<=cnt_beep+1'b1;
 	if(cnt_beep==pitch && lock && ((mode==3'b001) || (mode==3'b011)))begin
-		BEEP<=~BEEP;
+		beep<=~beep;
 		cnt_beep<=0;
 		case(trck)//Choose tracks
 			3'b001:case(cnt_beep_prgs)//Fur Elise
@@ -214,6 +205,8 @@ always@(posedge CLK)begin
 		endcase
 	end
 end
+
+assign BEEP=beep;
 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
@@ -222,6 +215,7 @@ end
 ///////
 reg[22:0]cnt_led_div=1'b0;//Control the period of state transition
 reg[4:0]cnt_led_prgs=1'b0;//The progress of led shining
+reg[15:0]led;
 
 always@(posedge CLK)
 	if(cnt_led_div==23'd5000000)//5,000,000/50,000,000=100ms,10Hz
@@ -233,48 +227,49 @@ always@(posedge CLK)
 	if(cnt_led_div==23'd5000000 && lock && (mode==3'b010))begin
 		cnt_led_prgs<=cnt_led_prgs+1'b1;
 		case(cnt_led_prgs)
-			8'd00:LED<=16'b10000000_00000000;
-			8'd01:LED<=16'b11000000_00000000;
-			8'd02:LED<=16'b11100000_00000000;
-			8'd03:LED<=16'b01110000_00000000;
-			8'd04:LED<=16'b00111000_00000000;
-			8'd05:LED<=16'b00011100_00000000;
-			8'd06:LED<=16'b00001110_00000000;
-			8'd07:LED<=16'b00000111_00000000;
-			8'd08:LED<=16'b00000011_10000000;
-			8'd09:LED<=16'b00000001_11000000;
-			8'd10:LED<=16'b00000000_11100000;
-			8'd11:LED<=16'b00000000_01110000;
-			8'd12:LED<=16'b00000000_00111000;
-			8'd13:LED<=16'b00000000_00011100;
-			8'd14:LED<=16'b00000000_00001110;
-			8'd15:LED<=16'b00000000_00000111;
-			8'd16:LED<=16'b00000000_00000011;
-			8'd17:LED<=16'b00000000_00000001;
-			8'd18:LED<=16'b00000000_00000000;
+			8'd00:led<=16'b10000000_00000000;
+			8'd01:led<=16'b11000000_00000000;
+			8'd02:led<=16'b11100000_00000000;
+			8'd03:led<=16'b01110000_00000000;
+			8'd04:led<=16'b00111000_00000000;
+			8'd05:led<=16'b00011100_00000000;
+			8'd06:led<=16'b00001110_00000000;
+			8'd07:led<=16'b00000111_00000000;
+			8'd08:led<=16'b00000011_10000000;
+			8'd09:led<=16'b00000001_11000000;
+			8'd10:led<=16'b00000000_11100000;
+			8'd11:led<=16'b00000000_01110000;
+			8'd12:led<=16'b00000000_00111000;
+			8'd13:led<=16'b00000000_00011100;
+			8'd14:led<=16'b00000000_00001110;
+			8'd15:led<=16'b00000000_00000111;
+			8'd16:led<=16'b00000000_00000011;
+			8'd17:led<=16'b00000000_00000001;
+			8'd18:led<=16'b00000000_00000000;
 			8'd20:cnt_led_prgs<=1'b0;
 			default:;
 		endcase
 	end
 	else if(lock && mode==3'b011)
 		case(pitch)
-			m1:LED<=16'b00000000_00000001;
-			m2:LED<=16'b00000000_00000010;
-			m3:LED<=16'b00000000_00000100;
-			m4:LED<=16'b00000000_00001000;
-			m5:LED<=16'b00000000_00010000;
-			m6:LED<=16'b00000000_00100000;
-			m7:LED<=16'b00000000_01000000;
-			h1:LED<=16'b00000000_10000000;
-			h2:LED<=16'b00000001_00000000;
-			h3:LED<=16'b00000010_00000000;
-			h4:LED<=16'b00000100_00000000;
-			h5:LED<=16'b00001000_00000000;
-			mute:LED<=16'b00000000_00000000;
+			m1:led<=16'b00000000_00000001;
+			m2:led<=16'b00000000_00000010;
+			m3:led<=16'b00000000_00000100;
+			m4:led<=16'b00000000_00001000;
+			m5:led<=16'b00000000_00010000;
+			m6:led<=16'b00000000_00100000;
+			m7:led<=16'b00000000_01000000;
+			h1:led<=16'b00000000_10000000;
+			h2:led<=16'b00000001_00000000;
+			h3:led<=16'b00000010_00000000;
+			h4:led<=16'b00000100_00000000;
+			h5:led<=16'b00001000_00000000;
+			mute:led<=16'b00000000_00000000;
 		default:;
 		endcase
-	else if(!lock)
-		LED<=16'b00000000_00000000;
+	else if(!lock || mode==3'b001 || mode==3'b100)
+		led<=16'b00000000_00000000;
+assign LED=led;
 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
@@ -282,6 +277,8 @@ always@(posedge CLK)
 //DISP//
 ////////
 reg[18:0]cnt_seg=1'b0;//The scan frequency of segment displays
+reg[6:0]seg;
+reg[7:0]cat;
 
 always@(posedge BP_MODE)
 	if(mode==3'b100)
@@ -304,25 +301,28 @@ always@(posedge CLK)
 always@(posedge CLK)
 	if(cnt_seg==19'd250000)begin
 		case(mode)
-			3'b001:SEG<=7'h06;
-			3'b010:SEG<=7'h5b;
-			3'b011:SEG<=7'h4f;
-			3'b100:SEG<=7'h66;
+			3'b001:seg<=7'h06;
+			3'b010:seg<=7'h5b;
+			3'b011:seg<=7'h4f;
+			3'b100:seg<=7'h66;
 		default:;
 		endcase
-		CAT<=8'b1111_1110;
+		cat<=8'b1111_1110;
 	end
 	else if(cnt_seg==19'd500000)begin
 		case(trck)
-			3'b001:SEG<=7'h06;
-			3'b010:SEG<=7'h5b;
-			3'b011:SEG<=7'h4f;
-			3'b100:SEG<=7'h66;
-			3'b101:SEG<=7'h6d;
+			3'b001:seg<=7'h06;
+			3'b010:seg<=7'h5b;
+			3'b011:seg<=7'h4f;
+			3'b100:seg<=7'h66;
+			3'b101:seg<=7'h6d;
 		default:;
 		endcase
-		CAT<=8'b1111_1011;
+		cat<=8'b1111_1011;
 	end
+
+assign SEG=seg;
+assign CAT=cat;
 //---------------------------------------------------------------------
 
 //---------------------------------------------------------------------
@@ -480,67 +480,76 @@ always@(*)
 		default:;
 	endcase
 
+reg lcd_rs;
+
 always@(posedge CLK or negedge BTN_TRCK)
 	if(!BTN_TRCK)
-		LCD_RS<=1'b0;//Order or data.0:order,1:data
+		lcd_rs<=1'b0;//Order or data.0:order,1:data
 	else if(write_flag)
 		if((n_state==SET_FUNCTION)||(n_state==DISP_OFF)||(n_state==DISP_CLEAR)||(n_state==ENTRY_MODE)||(n_state==DISP_ON)||(n_state==ROW1_ADDR)||(n_state==ROW2_ADDR))
-			LCD_RS<=1'b0; 
+			lcd_rs<=1'b0; 
 		else
-			LCD_RS<=1'b1;
+			lcd_rs<=1'b1;
 	else
-		LCD_RS<=LCD_RS;
+		lcd_rs<=lcd_rs;
+
+assign LCD_RS=lcd_rs;
+
+reg[7:0]lcd_data;
 
 always@(posedge CLK or negedge BTN_TRCK)
 	if(!BTN_TRCK)
-		LCD_DATA<=1'b0 ;
+		lcd_data<=1'b0 ;
 	else if(write_flag)
 		case(n_state)
-			IDLE:LCD_DATA<=8'hxx;
-			SET_FUNCTION:LCD_DATA<=8'h38;//2*16,5*8,8-bit data
-			DISP_OFF:LCD_DATA<=8'h08;
-			DISP_CLEAR:LCD_DATA<=8'h01;
-			ENTRY_MODE:LCD_DATA<=8'h06;
-			DISP_ON:LCD_DATA<=8'h0c;//Display on,no cursor,no flicker
+			IDLE:lcd_data<=8'hxx;
+			SET_FUNCTION:lcd_data<=8'h38;//2*16,5*8,8-bit data
+			DISP_OFF:lcd_data<=8'h08;
+			DISP_CLEAR:lcd_data<=8'h01;
+			ENTRY_MODE:lcd_data<=8'h06;
+			DISP_ON:lcd_data<=8'h0c;//Display on,no cursor,no flicker
 
-			ROW1_ADDR:LCD_DATA<=8'h80;//00+80
-			ROW1_0:LCD_DATA<=row_1[127:120];
-			ROW1_1:LCD_DATA<=row_1[119:112];
-			ROW1_2:LCD_DATA<=row_1[111:104];
-			ROW1_3:LCD_DATA<=row_1[103: 96];
-			ROW1_4:LCD_DATA<=row_1[ 95: 88];
-			ROW1_5:LCD_DATA<=row_1[ 87: 80];
-			ROW1_6:LCD_DATA<=row_1[ 79: 72];
-			ROW1_7:LCD_DATA<=row_1[ 71: 64];
-			ROW1_8:LCD_DATA<=row_1[ 63: 56];
-			ROW1_9:LCD_DATA<=row_1[ 55: 48];
-			ROW1_A:LCD_DATA<=row_1[ 47: 40];
-			ROW1_B:LCD_DATA<=row_1[ 39: 32];
-			ROW1_C:LCD_DATA<=row_1[ 31: 24];
-			ROW1_D:LCD_DATA<=row_1[ 23: 16];
-			ROW1_E:LCD_DATA<=row_1[ 15:  8];
-			ROW1_F:LCD_DATA<=row_1[  7:  0];
+			ROW1_ADDR:lcd_data<=8'h80;//00+80
+			ROW1_0:lcd_data<=row_1[127:120];
+			ROW1_1:lcd_data<=row_1[119:112];
+			ROW1_2:lcd_data<=row_1[111:104];
+			ROW1_3:lcd_data<=row_1[103: 96];
+			ROW1_4:lcd_data<=row_1[ 95: 88];
+			ROW1_5:lcd_data<=row_1[ 87: 80];
+			ROW1_6:lcd_data<=row_1[ 79: 72];
+			ROW1_7:lcd_data<=row_1[ 71: 64];
+			ROW1_8:lcd_data<=row_1[ 63: 56];
+			ROW1_9:lcd_data<=row_1[ 55: 48];
+			ROW1_A:lcd_data<=row_1[ 47: 40];
+			ROW1_B:lcd_data<=row_1[ 39: 32];
+			ROW1_C:lcd_data<=row_1[ 31: 24];
+			ROW1_D:lcd_data<=row_1[ 23: 16];
+			ROW1_E:lcd_data<=row_1[ 15:  8];
+			ROW1_F:lcd_data<=row_1[  7:  0];
 
-			ROW2_ADDR:LCD_DATA<=8'hc0;//40+80
-			ROW2_0:LCD_DATA<=row_2[127:120];
-			ROW2_1:LCD_DATA<=row_2[119:112];
-			ROW2_2:LCD_DATA<=row_2[111:104];
-			ROW2_3:LCD_DATA<=row_2[103: 96];
-			ROW2_4:LCD_DATA<=row_2[ 95: 88];
-			ROW2_5:LCD_DATA<=row_2[ 87: 80];
-			ROW2_6:LCD_DATA<=row_2[ 79: 72];
-			ROW2_7:LCD_DATA<=row_2[ 71: 64];
-			ROW2_8:LCD_DATA<=row_2[ 63: 56];
-			ROW2_9:LCD_DATA<=row_2[ 55: 48];
-			ROW2_A:LCD_DATA<=row_2[ 47: 40];
-			ROW2_B:LCD_DATA<=row_2[ 39: 32];
-			ROW2_C:LCD_DATA<=row_2[ 31: 24];
-			ROW2_D:LCD_DATA<=row_2[ 23: 16];
-			ROW2_E:LCD_DATA<=row_2[ 15:  8];
-			ROW2_F:LCD_DATA<=row_2[  7:  0];
+			ROW2_ADDR:lcd_data<=8'hc0;//40+80
+			ROW2_0:lcd_data<=row_2[127:120];
+			ROW2_1:lcd_data<=row_2[119:112];
+			ROW2_2:lcd_data<=row_2[111:104];
+			ROW2_3:lcd_data<=row_2[103: 96];
+			ROW2_4:lcd_data<=row_2[ 95: 88];
+			ROW2_5:lcd_data<=row_2[ 87: 80];
+			ROW2_6:lcd_data<=row_2[ 79: 72];
+			ROW2_7:lcd_data<=row_2[ 71: 64];
+			ROW2_8:lcd_data<=row_2[ 63: 56];
+			ROW2_9:lcd_data<=row_2[ 55: 48];
+			ROW2_A:lcd_data<=row_2[ 47: 40];
+			ROW2_B:lcd_data<=row_2[ 39: 32];
+			ROW2_C:lcd_data<=row_2[ 31: 24];
+			ROW2_D:lcd_data<=row_2[ 23: 16];
+			ROW2_E:lcd_data<=row_2[ 15:  8];
+			ROW2_F:lcd_data<=row_2[  7:  0];
 		endcase
 	else
-		LCD_DATA<=LCD_DATA;
+		lcd_data<=lcd_data;
+
+
+assign LCD_DATA=lcd_data;
 //---------------------------------------------------------------------
 
 endmodule
